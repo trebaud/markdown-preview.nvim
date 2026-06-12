@@ -2,6 +2,8 @@
 
 Live markdown preview in your browser, powered by [Bun](https://bun.sh). Save the buffer and the page reloads instantly via server-sent events — no polling, no heavyweight dependencies.
 
+![Editing markdown in Neovim while the browser preview live-reloads on save](assets/demo.gif)
+
 ## Features
 
 - **Live reload on save** — server-sent events push updates to the browser the moment you `:w`

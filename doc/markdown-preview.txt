@@ -1,0 +1,52 @@
+*markdown-preview.txt*    Live browser preview for markdown, powered by Bun
+
+==============================================================================
+CONTENTS                                            *markdown-preview-contents*
+
+    1. Introduction ........................... |markdown-preview-introduction|
+    2. Requirements ........................... |markdown-preview-requirements|
+    3. Commands ............................... |markdown-preview-commands|
+    4. How it works ........................... |markdown-preview-how-it-works|
+
+==============================================================================
+1. INTRODUCTION                                 *markdown-preview-introduction*
+
+markdown-preview.nvim renders the current markdown buffer in your default
+browser and live-reloads the page every time you save, using server-sent
+events. Rendering is GitHub-flavored (via marked), with syntax-highlighted
+code blocks, heading anchors, a light/dark theme toggle, and support for
+relative local assets such as images.
+
+==============================================================================
+2. REQUIREMENTS                                 *markdown-preview-requirements*
+
+- Neovim >= 0.10
+- bun (https://bun.sh) on your $PATH
+- curl (used to trigger reloads on save)
+
+Server dependencies are installed automatically with `bun install` the first
+time the preview is started.
+
+Run `:checkhealth markdown-preview` to verify your setup.
+
+==============================================================================
+3. COMMANDS                                         *markdown-preview-commands*
+
+                                                              *:MarkdownPreview*
+:MarkdownPreview        Start the preview server for the current buffer and
+                        open it in your default browser. The buffer must be
+                        saved to a file first.
+
+                                                          *:MarkdownPreviewStop*
+:MarkdownPreviewStop    Stop the preview server. The server is also stopped
+                        automatically when Neovim exits.
+
+==============================================================================
+4. HOW IT WORKS                                 *markdown-preview-how-it-works*
+
+|:MarkdownPreview| spawns a small Bun server bound to 127.0.0.1 on a random
+free port, serving the rendered markdown. A |BufWritePost| autocmd pings the
+server on save; the server re-renders the file and notifies all connected
+browser tabs over an SSE stream, which then refresh their content.
+
+vim:tw=78:ts=8:noet:ft=help:norl:

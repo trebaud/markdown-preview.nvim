@@ -1,0 +1,7 @@
+{
+  "name": "markdown-preview-server",
+  "private": true,
+  "dependencies": {
+    "marked": "^15.0.0"
+  }
+}

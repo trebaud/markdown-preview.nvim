@@ -11,6 +11,8 @@ Live markdown preview in your browser, powered by [Bun](https://bun.sh). Save th
 - **Syntax highlighting** for fenced code blocks via highlight.js
 - **Light/dark theme** with a toggle, following your system preference by default
 - **Heading anchors** — `#some-section` links work like on GitHub
+- **Vim-style navigation** — `j`/`k`/`h`/`l` scroll, `gg`/`G` jump to top/bottom, `Ctrl-d`/`Ctrl-u` half-page
+- **Live search** — `Ctrl-k` (or `/`) opens a search modal that highlights matches as you type; navigate with `↑`/`↓`, jump with `↵`, close with `esc`
 - **Local assets** — relative images and files resolve against the markdown file's directory
 - **Localhost only** — the server binds to `127.0.0.1` on a random free port
 

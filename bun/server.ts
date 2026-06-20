@@ -43,8 +43,13 @@ const server = Bun.serve({
     const { pathname } = new URL(req.url);
     if (pathname === "/")
       return new Response(shell(), { headers: { "content-type": "text/html" } });
-    if (pathname === "/app.css" || pathname === "/app.js")
-      return new Response(Bun.file(path.join(web, pathname)));
+    if (pathname === "/app.css" || pathname === "/app.js") {
+      const filePath = path.join(web, pathname.slice(1));
+      const contentType = pathname.endsWith(".css")
+        ? "text/css; charset=utf-8"
+        : "text/javascript; charset=utf-8";
+      return new Response(Bun.file(filePath), { headers: { "content-type": contentType } });
+    }
     if (pathname === "/content")
       return new Response(await marked.parse(await Bun.file(file).text()), {
         headers: { "content-type": "text/html" },

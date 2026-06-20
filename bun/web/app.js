@@ -37,7 +37,9 @@ addEventListener("keydown", (e) => {
     openSearch();
     return;
   }
-  if (searchOpen || typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (searchOpen || typing(e.target) || e.metaKey || e.altKey) return;
+  // Allow Ctrl-d / Ctrl-u for half-page scrolling, but keep other Ctrl shortcuts working.
+  if (e.ctrlKey && e.key !== "d" && e.key !== "u") return;
   if (e.key === "/") { e.preventDefault(); openSearch(); return; }
   let handled = true;
   switch (e.key) {
@@ -45,8 +47,8 @@ addEventListener("keydown", (e) => {
     case "k": scrollBy({ top: -LINE }); break;
     case "l": scrollBy({ left: LINE }); break;
     case "h": scrollBy({ left: -LINE }); break;
-    case "d": if (e.shiftKey) break; scrollBy({ top: innerHeight / 2 }); break;
-    case "u": scrollBy({ top: -innerHeight / 2 }); break;
+    case "d": if (!e.ctrlKey) { handled = false; break; } scrollBy({ top: innerHeight / 2 }); break;
+    case "u": if (!e.ctrlKey) { handled = false; break; } scrollBy({ top: -innerHeight / 2 }); break;
     case "G": scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); break;
     case "g":
       if (pendingG) { scrollTo({ top: 0, behavior: "smooth" }); pendingG = 0; }

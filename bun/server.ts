@@ -78,6 +78,7 @@ const server = Bun.serve({
       const abs = path.resolve(root, rel);
       const prefix = root.endsWith(path.sep) ? root : root + path.sep;
       if (abs !== root && !abs.startsWith(prefix)) return new Response("403", { status: 403 });
+      const f = Bun.file(abs);
       if (!(await f.exists())) return new Response("404", { status: 404 });
       ensureWatch(abs);
       const text = await f.text();

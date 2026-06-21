@@ -43,6 +43,7 @@ code { font: 0.875em/1.65 ui-monospace, "SF Mono", "JetBrains Mono", monospace }
 :not(pre) > code { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.1em 0.4em }
 pre { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.2rem; overflow-x: auto }
 pre code { background: none; border: 0; padding: 0 }
+pre.raw { white-space: pre-wrap; word-break: break-word }
 table { border-collapse: collapse; width: 100%; margin: 1.2em 0; font-size: 0.95em }
 th { text-align: left; font-weight: 600; color: var(--muted); font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em }
 th, td { padding: 0.55em 0.9em; border-bottom: 1px solid var(--line) }

@@ -13,6 +13,7 @@ Live markdown preview in your browser, powered by [Bun](https://bun.sh). Save th
 - **Heading anchors** — `#some-section` links work like on GitHub
 - **Vim-style navigation** — `j`/`k`/`h`/`l` scroll, `gg`/`G` jump to top/bottom, `Ctrl-d`/`Ctrl-u` half-page
 - **Live search** — `Ctrl-k` (or `/`) opens a search modal that highlights matches as you type; navigate with `↑`/`↓`, jump with `↵`, close with `esc`
+- **Follow links** — click a link to another markdown file and it renders right in the preview (with back/forward, live reload, search, and heading anchors all working); links to non-markdown files open as raw text in the browser
 - **Local assets** — relative images and files resolve against the markdown file's directory
 - **Localhost only** — the server binds to `127.0.0.1` on a random free port
 

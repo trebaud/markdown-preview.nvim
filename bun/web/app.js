@@ -9,23 +9,58 @@ document.getElementById("theme").onclick = () => {
   document.startViewTransition ? document.startViewTransition(swap) : swap();
 };
 const content = document.getElementById("content");
-let firstRender = true;
-async function refresh() {
-  const html = await (await fetch("/content")).text();
+const home = content.dataset.home || "";
+
+// The page currently shown, as a path relative to the previewed file's dir.
+// The browser URL is the source of truth so reload / back / forward all work.
+function currentPath() {
+  const p = decodeURIComponent(location.pathname);
+  return p === "/" ? home : p.replace(/^\//, "");
+}
+
+async function load(scroll) {
+  const path = currentPath();
+  const html = await (await fetch("/content?path=" + encodeURIComponent(path))).text();
   const swap = () => {
     content.innerHTML = html;
     hljs.highlightAll();
-    if (firstRender && location.hash) {
-      firstRender = false;
-      document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+    if (scroll) {
+      const id = decodeURIComponent(location.hash.slice(1));
+      if (id) document.getElementById(id)?.scrollIntoView();
+      else scrollTo(0, 0);
     }
-    firstRender = false;
   };
   document.startViewTransition ? document.startViewTransition(swap) : swap();
   // re-run an in-progress search against the freshly rendered content
   if (searchOpen) requestAnimationFrame(() => runSearch(input.value));
+  document.title = path.split("/").pop() || "preview";
 }
-new EventSource("/events").onmessage = refresh;
+
+// Only refresh when the file that changed is the one we're looking at
+// ("*" is a forced reload pinged by Neovim on save).
+new EventSource("/events").onmessage = (e) => {
+  if (e.data === "*" || e.data === currentPath()) load(false);
+};
+
+// Follow links to other markdown pages inside the preview; leave external links
+// and non-markdown files (images, raw text, …) to the browser's default.
+content.addEventListener("click", (e) => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const a = e.target.closest("a");
+  if (!a) return;
+  const url = new URL(a.href, location.href);
+  if (url.origin !== location.origin) return;
+  if (!/\.(md|markdown)$/i.test(url.pathname)) return;
+  e.preventDefault();
+  if (url.pathname === location.pathname) {
+    const id = decodeURIComponent(url.hash.slice(1));
+    if (id) document.getElementById(id)?.scrollIntoView();
+    return;
+  }
+  history.pushState(null, "", url.pathname + url.hash);
+  load(true);
+});
+addEventListener("popstate", () => load(true));
 
 /* ---- vim-style navigation ---- */
 const LINE = 64;
@@ -180,4 +215,4 @@ input.addEventListener("keydown", (e) => {
 });
 overlay.addEventListener("mousedown", (e) => { if (e.target === overlay) closeSearch(); });
 
-refresh();
+load(true);

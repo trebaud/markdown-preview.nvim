@@ -46,7 +46,7 @@ new EventSource("/events").onmessage = (e) => {
 // and non-markdown files (images, raw text, …) to the browser's default.
 content.addEventListener("click", (e) => {
   if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  const a = e.target.closest("a");
+  const a = e.target instanceof Element ? e.target.closest("a") : null;
   if (!a) return;
   const url = new URL(a.href, location.href);
   if (url.origin !== location.origin) return;

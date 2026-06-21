@@ -98,9 +98,11 @@ const server = Bun.serve({
         { headers: { "content-type": "text/event-stream", "cache-control": "no-cache" } },
       );
     }
-    const abs = path.join(dir, decodeURIComponent(pathname));
+    const root = path.resolve(dir);
+    const abs = path.resolve(root, "." + decodeURIComponent(pathname));
+    const prefix = root.endsWith(path.sep) ? root : root + path.sep;
+    if (abs !== root && !abs.startsWith(prefix)) return new Response("403", { status: 403 });
     const asset = Bun.file(abs);
-    if (!(await asset.exists())) return new Response("404", { status: 404 });
     // A direct browser navigation to a markdown file (reload, opened link in a
     // new tab, bookmark) boots the SPA, which renders it. Everything else —
     // images, raw `.txt`, etc. — is served as-is, as before.

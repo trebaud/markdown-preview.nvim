@@ -34,6 +34,17 @@ const send = (data: string) =>
 
 const toRel = (abs: string) => path.relative(dir, abs).split(path.sep).join("/");
 
+// A bad percent-escape (e.g. a lone `%`) makes decodeURIComponent throw; treat
+// such junk requests as not-found rather than crashing the handler.
+const safeDecode = (s: string): string | null => {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return null;
+  }
+};
+const hasNul = (s: string) => s.includes("\0");
+
 // Watch each file the moment it is first rendered, so edits to any linked page
 // (not just the original) live-reload too.
 const watched = new Set<string>();
@@ -65,6 +76,9 @@ const server = Bun.serve({
     const { pathname, searchParams } = new URL(req.url);
     if (pathname === "/")
       return new Response(shell(home), { headers: { "content-type": "text/html" } });
+    // Browsers always request this; we have no icon, so answer cheaply instead
+    // of letting it fall through to the asset catch-all and log a 404.
+    if (pathname === "/favicon.ico") return new Response(null, { status: 204 });
     if (pathname === "/app.css" || pathname === "/app.js") {
       const filePath = path.join(web, pathname.slice(1));
       const contentType = pathname.endsWith(".css")
@@ -74,10 +88,12 @@ const server = Bun.serve({
     }
     if (pathname === "/content") {
       const rel = searchParams.get("path") || home;
+      if (hasNul(rel)) return new Response("400", { status: 400 });
       const root = path.resolve(dir);
       const abs = path.resolve(root, rel);
       const prefix = root.endsWith(path.sep) ? root : root + path.sep;
       if (abs !== root && !abs.startsWith(prefix)) return new Response("403", { status: 403 });
+      const f = Bun.file(abs);
       if (!(await f.exists())) return new Response("404", { status: 404 });
       ensureWatch(abs);
       const text = await f.text();
@@ -100,17 +116,32 @@ const server = Bun.serve({
         { headers: { "content-type": "text/event-stream", "cache-control": "no-cache" } },
       );
     }
+    const rel = safeDecode(pathname);
+    if (rel === null || hasNul(rel)) return new Response("400", { status: 400 });
     const root = path.resolve(dir);
-    const abs = path.resolve(root, "." + decodeURIComponent(pathname));
+    const abs = path.resolve(root, "." + rel);
     const prefix = root.endsWith(path.sep) ? root : root + path.sep;
     if (abs !== root && !abs.startsWith(prefix)) return new Response("403", { status: 403 });
     const asset = Bun.file(abs);
+    // Stop here rather than streaming a missing file, which throws ENOENT (a 500).
+    if (!(await asset.exists())) return new Response("404", { status: 404 });
     // A direct browser navigation to a markdown file (reload, opened link in a
     // new tab, bookmark) boots the SPA, which renders it. Everything else —
     // images, raw `.txt`, etc. — is served as-is, as before.
     if (isMarkdown(abs) && (req.headers.get("accept") || "").includes("text/html"))
       return new Response(shell(toRel(abs)), { headers: { "content-type": "text/html" } });
     return new Response(asset);
+  },
+  // Without this, any unexpected throw in `fetch` becomes a bare 500 whose
+  // cause is invisible (stderr is swallowed when launched via nvim jobstart).
+  // Surface it in the body and the log so failures are diagnosable.
+  error(err) {
+    console.error("[markdown-preview] request failed:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    return new Response(`preview server error: ${message}`, {
+      status: 500,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
   },
 });
 
